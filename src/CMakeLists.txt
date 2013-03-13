@@ -38,6 +38,8 @@ set(SOURCES
 	calibrate.h
 	cameraInput.h
 	cameraInput.cpp
+	JSSeralizer.cpp
+	JSSeralizer.h
 	)
 	
 add_executable(${PROJECT_NAME}
