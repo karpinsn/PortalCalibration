@@ -1,9 +1,12 @@
 #ifndef _H_PORTAL_CALIBRATION_CALIBRATION_ENGINE_
 #define _H_PORTAL_CALIBRATION_CALIBRATION_ENGINE_
 
+#define _USE_MATH_DEFINES
+
 // Standard C++ includes
 #include <memory>
 #include <iostream>
+#include <math.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,8 +18,12 @@
 
 // Camera Library includes
 #include <lens\ICamera.h>
+#include <reelblink\IProjector.h>
+
 #include "CalibrationData.h"
 #include "Display.h"
+#include "NFringeStructuredLight.h"
+#include "TwoWavelengthPhaseUnwrapper.h"
 
 using namespace std;
 
@@ -30,21 +37,27 @@ private:
   const float m_markerDiameter;
 
 public:
-	CalibrationEngine(const int boardWidth, const int boardHeight);
-	void calibrateChessboard(shared_ptr<lens::ICamera> capture, int requestedSamples);
+	CalibrationEngine(const int boardWidth, const int boardHeight, const float markerSize);
+	shared_ptr<CalibrationData> CalibrateCameraIntrinsics(shared_ptr<lens::ICamera> capture, const int requestedSamples);
+	void						CalibrateCameraExtrinsics(shared_ptr<lens::ICamera> capture, shared_ptr<CalibrationData> calibrationData);
+	shared_ptr<CalibrationData> CalibrateProjectorIntrinsics(shared_ptr<lens::ICamera> capture, shared_ptr<IProjector> projector, const int requestedSamples);
+	void						CalibrateProjectorExtrinsics(shared_ptr<lens::ICamera> capture, shared_ptr<IProjector> projector, shared_ptr<CalibrationData> calibrationData);
 
 private:
 	// Used for aquiring the data for calibration
-	vector<vector<cv::Point2f>> GrabImagePoints(shared_ptr<lens::ICamera> capture, int poses2Capture );
+	vector<vector<cv::Point2f>> GrabCameraImagePoints(shared_ptr<lens::ICamera> capture, int poses2Capture );
+	vector<vector<cv::Point2f>> GrabProjectorImagePoints(shared_ptr<lens::ICamera> capture, shared_ptr<IProjector> projector, int poses2Capture );
+	
+	cv::Mat ProjectAndCaptureUnwrappedPhase(shared_ptr<lens::ICamera> capture, shared_ptr<IProjector> projector, IStructuredLight::FringeDirection direction);
+	cv::Mat ProjectAndCaptureWrappedPhase(shared_ptr<lens::ICamera> capture, shared_ptr<IProjector> projector, vector<cv::Mat> fringeImages);
 	vector<cv::Point3f> CalculateObjectPoints();
 
 	// Used for the actual calibration
-	CalibrationData CalibrateView(vector<cv::Point3f> objectPoints, vector<vector<cv::Point2f>> imagePoints, cv::Size viewSize);
-	void CalibrateExtrinsic(vector<cv::Point3f> objectPoints, vector<vector<cv::Point2f>> imagePoints, CalibrationData& calibrationData);
-	
-	// TODO - Misc (Need to fix)
-	void unDistort(shared_ptr<lens::ICamera> capture, shared_ptr<CvMat> distortion_coeffs, shared_ptr<CvMat> intrinsic_matrix);
-	void saveCalibrationData(shared_ptr<CvMat> distortion_coeffs, shared_ptr<CvMat> intrinsic_matrix); 
+	shared_ptr<CalibrationData> CalibrateView(vector<cv::Point3f> objectPoints, vector<vector<cv::Point2f>> imagePoints, cv::Size viewSize);
+	void CalibrateExtrinsic(vector<cv::Point3f> objectPoints, vector<vector<cv::Point2f>> imagePoints, shared_ptr<CalibrationData> calibrationData);
+
+	cv::Mat DitherImage(const cv::Mat originalImage);
+	float InterpolateProjectorPosition(float phi, float phi0, int pitch);
 };
 
 #endif // _H_PORTAL_CALIBRATION_CALIBRATION_ENGINE_

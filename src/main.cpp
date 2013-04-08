@@ -7,60 +7,44 @@
 #include <highgui.h>
 
 #include <lens\ICamera.h>
+#include <lens\PointGreyCamera.h>
 #include <lens\OpenCVCamera.h>
 
+#include <reelblink\IProjector.h>
+#include <reelblink\LightCommanderProjector.h>
+
+#include "JSSerializer.h"
 #include "CalibrationEngine.h"
 
 int main(int argc, char* argv[])
 {
-	// Setup the camera
-	auto camera = shared_ptr<lens::OpenCVCamera>( new lens::OpenCVCamera() );
-	camera->open();
-	assert(camera != nullptr);
+  const int intrinsicSamples = 1;
+
+  // Setup the camera
+  auto camera = shared_ptr<lens::PointGreyCamera>( new lens::PointGreyCamera() );
+  Utils::AssertOrThrowIfFalse( nullptr != camera, "Unable to create the camera object" );
+  Utils::AssertOrThrowIfFalse( camera->open( ), "Unable to initialize the camera" );
 	
-	// Setup the calibration engine
-	CalibrationEngine calibrationEngine(4, 11);
-	calibrationEngine.calibrateChessboard(camera, 5);
-	return 0;
-}
+  auto projector = shared_ptr<LightCommanderProjector>( new LightCommanderProjector( ) );
+  Utils::AssertOrThrowIfFalse( nullptr != projector, "Unable to create the projector object" );
+  Utils::AssertOrThrowIfFalse( projector->Init(), "Unable to intialize the projector" );
+  
+  // Setup the calibration engine
+  CalibrationEngine calibrationEngine(4, 11, .5f);
+  
+  // Calibrate intrinsics for the camera and projector
+  auto projectorCalibration = calibrationEngine.CalibrateProjectorIntrinsics(camera, projector, intrinsicSamples);
+  auto cameraCalibration = calibrationEngine.CalibrateCameraIntrinsics(camera, intrinsicSamples);
 
-void unDistort(shared_ptr<lens::ICamera> capture, shared_ptr<CvMat> distortion_coeffs, shared_ptr<CvMat> intrinsic_matrix)
-{		
-	auto image = capture->getFrame();
+  // Calibrate extrinsics for the camera and projector
+  calibrationEngine.CalibrateProjectorExtrinsics(camera, projector, projectorCalibration);
+  calibrationEngine.CalibrateCameraExtrinsics(camera, cameraCalibration);
 
-	//Build the undistort map that we  will use for all subsequent frames.
-	auto mapx = shared_ptr<IplImage>( cvCreateImage( cvGetSize(image), IPL_DEPTH_32F, 1), [] (IplImage* ptr) { cvReleaseImage(&ptr); } );
-	auto mapy = shared_ptr<IplImage>( cvCreateImage( cvGetSize(image), IPL_DEPTH_32F, 1), [] (IplImage* ptr) { cvReleaseImage(&ptr); } );
-	shared_ptr<CvMat> extrinsic_matrix = nullptr;
+  JSSerializer projectorSerializer("ProjectorCalibration.js");
+  JSSerializer cameraSerializer("CameraCalibration.js");
 
-	cvInitUndistortMap(intrinsic_matrix.get(), distortion_coeffs.get(), mapx.get(), mapy.get());
+  projectorSerializer.Serialize( projectorCalibration );
+  cameraSerializer.Serialize( cameraCalibration );
 
-	//Just run the camera to the screen, now showing the raw and the undistorted image
-	cvNamedWindow("Undistort");
-	cvNamedWindow("Calibration");
-
-	auto adjustedImage = shared_ptr<IplImage>( cvCloneImage(image) , [] (IplImage* ptr) { cvReleaseImage(&ptr); } );
-
-	while (nullptr != image)
-	{
-		cvShowImage("Calibration", image); //Show raw image
-		cvRemap(image, adjustedImage.get(), mapx.get(), mapy.get()); //Undistort image
-		cvShowImage("Undistort", adjustedImage.get()); //Show corrected image
-		
-		//Handle ESC
-		int c = cvWaitKey(15);
-		if (c == 27)
-		{
-			break;
-		}
-
-		image = capture->getFrame();
-	}
-}
-
-void saveCalibrationData(shared_ptr<CvMat> distortion_coeffs, shared_ptr<CvMat> intrinsic_matrix)
-{
-	// TODO - Currently save to xml, soon this should be a .qs file
-	cvSave("Intrinsics.xml", intrinsic_matrix.get());
-	cvSave("Distortion.xml", distortion_coeffs.get());
+  return 0;
 }
