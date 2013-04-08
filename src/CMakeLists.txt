@@ -44,6 +44,9 @@ set(SOURCES
     NFringePhaseWrapper.cpp
     TwoWavelengthPhaseUnwrapper.h
     TwoWavelengthPhaseUnwrapper.cpp
+    ISerializer.h
+    JSSerializer.h
+    JSSerializer.cpp
 	)
 	
 add_executable(${PROJECT_NAME}
