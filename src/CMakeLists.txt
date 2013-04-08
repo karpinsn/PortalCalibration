@@ -3,6 +3,7 @@
 #
 
 ###
+
 # Add our sources
 set(PROJECT_SOURCES
     Main.cpp
@@ -23,6 +24,10 @@ set(PROJECT_SOURCES
     NFringestructuredLight.h
     TwoWavelengthPhaseUnwrapper.cpp
     TwoWavelengthPhaseUnwrapper.h
+
+    ISerializer.h
+    JSSerializer.h
+    JSSerializer.cpp
 	)
 
 add_executable(${PROJECT_NAME}

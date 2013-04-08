@@ -1,4 +1,18 @@
 #include "JSSerializer.h"
+<<<<<<< HEAD
+#include<string>
+
+using namespace std;
+
+JSSerializer::JSSerializer()
+{
+	// IF WE NEED TO ADD DATA MEMBERS, INIT HERE
+}
+
+void JSSerializer::WriteData(CalibrationData * data, string * fileName)
+{
+	
+=======
 
 JSSerializer::JSSerializer(string filename) : m_filename( filename )
 { }
@@ -44,4 +58,5 @@ void JSSerializer::_SerializeMatrix(ofstream& jsFile, const cv::Mat& matrix2Seri
 		{ jsFile << ","; }
 	}
   }
+>>>>>>> c3363c8642e58378d680d359c8a2fb07f2c8e9ed
 }
