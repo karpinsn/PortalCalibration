@@ -15,9 +15,6 @@
 #include <reelblink\LightCommanderProjector.h>
 #endif
 
-
-#define USE_QTFULLSCREEN
-
 #ifdef USE_QTFULLSCREEN
 #include <reelblink/QTFullscreen.h>
 #endif
@@ -78,9 +75,9 @@ int main(int argc, char* argv[])
   scriptInterface.AddObjectType<LightCommanderProjector>( "LightCommanderProjector" );
   #endif
 
-  //#ifdef  USE_QTFULLSCREEN
+  #ifdef  USE_QTFULLSCREEN
   scriptInterface.AddObjectType<QTFullscreen>("QTFullscreen");
-  //#endif
+  #endif
   
   scriptInterface.AddObjectType<CalibrationData>( "CalibrationData" );
   scriptInterface.AddObjectType<JSSerializer, QString>( "JSSerializer" );
