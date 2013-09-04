@@ -8,7 +8,7 @@
 #include <reelblink\config-reelblink.h>
 
 #ifdef USE_LIGHTCRAFTER_PROJECTOR
-#include <reelblink\TiLightCrafter\LightCrafter.h> 
+#include <reelblink\LightCrafter.h> 
 #endif
 
 #ifdef USE_LIGHTCOMMANDER_PROJECTOR
@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
   #endif
   #ifdef USE_POINT_GREY_CAMERA
   scriptInterface.AddObjectType<lens::PointGreyCamera>( "PointGreyCamera" );
+  scriptInterface.AddObjectType<lens::PointGreyCamera, unsigned int>( "PointGreyCamera" );
   #endif
   #ifdef USE_PHANTOM_CAMERA
   scriptInterface.AddObjectType<lens::PhantomCamera>( "PhantomCamera" );
