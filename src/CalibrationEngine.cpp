@@ -159,9 +159,20 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 			{
 			  // Use the horizontal unwrapped phase to get the x and vertical for y
 			  NFringeStructuredLight fringeGenerator(5);
+			  auto horizontalPitches = Utils::CalculateMinimumPitch( projector->GetWidth( ), 5 );
+			  auto verticalPitches   = Utils::CalculateMinimumPitch( projector->GetHeight( ), 5 );
+			  
+			  // This just converts from phase to projector UV and pushes them back into the point buffer
 			  projectorPointBuffer.push_back(cv::Point2f(
-				InterpolateProjectorPosition(Utils::SampleAt<float>(horizontalUnwrappedPhase, pointBuffer[coord]), fringeGenerator.GetPhi0( 70 ), 70),
-				InterpolateProjectorPosition(Utils::SampleAt<float>(verticalUnwrappedPhase, pointBuffer[coord]), fringeGenerator.GetPhi0( 70 ), 70)));
+				InterpolateProjectorPosition(
+				  Utils::SampleAt<float>(horizontalUnwrappedPhase, pointBuffer[coord]), 
+				  fringeGenerator.GetPhi0( get<0>( horizontalPitches ) ), 
+				  get<0>( horizontalPitches ) ),
+				InterpolateProjectorPosition(
+				  Utils::SampleAt<float>(verticalUnwrappedPhase, pointBuffer[coord]), 
+				  fringeGenerator.GetPhi0( get<0>( verticalPitches ) ), 
+				  get<0>( verticalPitches ) ) 
+				) );
 			}
 			imagePoints[1].push_back(projectorPointBuffer);
 		  }
@@ -184,17 +195,23 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 
 cv::Mat CalibrationEngine::ProjectAndCaptureUnwrappedPhase(lens::ICamera& capture, IProjector& projector, IStructuredLight::FringeDirection direction)
 {
+  int distance2Cover = 0;
+  if( direction == IStructuredLight::Horizontal )
+	{ distance2Cover = projector.GetWidth( ); }
+  else
+	{ distance2Cover = projector.GetHeight( ); }
+
   // TODO - How do we know that we want to use 5? (Settings File?)
   NFringeStructuredLight    	fringeGenerator(5);
-  TwoWavelengthPhaseUnwrapper   phaseUnwrapper( 70, 75 );
+  auto pitches =                Utils::CalculateMinimumPitch( distance2Cover, 5 );
+  TwoWavelengthPhaseUnwrapper   phaseUnwrapper( get<0>( pitches ), get<1>( pitches ) );
   vector<cv::Mat>			    wrappedPhase;
   cv::Size					    projectorSize( projector.GetWidth( ), projector.GetHeight( ) );
 
-  // TODO - How do we know that we want to use 70 and 75? (Settings File?)
-  auto smallWavelength = fringeGenerator.GenerateFringe(projectorSize, 70, direction);
+  auto smallWavelength = fringeGenerator.GenerateFringe(projectorSize, get<0>( pitches ), direction);
   wrappedPhase.push_back( ProjectAndCaptureWrappedPhase( capture, projector, smallWavelength ) );
 
-  auto largerWavelength = fringeGenerator.GenerateFringe(projectorSize, 75, direction);
+  auto largerWavelength = fringeGenerator.GenerateFringe(projectorSize, get<1>( pitches ), direction);
   wrappedPhase.push_back( ProjectAndCaptureWrappedPhase( capture, projector, largerWavelength ) );
 
   return phaseUnwrapper.UnwrapPhase(wrappedPhase);
