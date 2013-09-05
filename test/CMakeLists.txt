@@ -7,6 +7,7 @@ set(PROJECT_UNIT_TEST_NAME "${PROJECT_NAME}UnitTests")
 set(TESTS
     NFringeStructuredLightTest.cpp
     TwoWavelengthPhaseUnwrapperTest.cpp
+    UtilsTest.cpp
     )
 
 add_executable(${PROJECT_UNIT_TEST_NAME}

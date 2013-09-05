@@ -75,3 +75,21 @@ cv::Mat Utils::DitherImage(const cv::Mat originalImage)
 
   return ditheredImage;
 }
+
+pair<int, int> Utils::CalculateMinimumPitch( int distance2Cover, int fringeStep )
+{
+  // Here the pitch is really the pitch * fringeStep. If we just use "pitch" then we can
+  // quickly find the numbers and are guarenteed that they will be divisible by the step
+  int pitch = 1;
+  while( pitch < distance2Cover )
+  {
+	if( pitch * ( pitch + 1 ) * fringeStep > distance2Cover )
+	  { break; }
+
+	// Just keep increasing till we find a pitch or 
+	pitch++;
+  }
+ 
+  // Return our pitches, dont forget to multiply by the fringeStep
+  return make_pair( pitch * fringeStep, ( pitch + 1 ) * fringeStep );
+}

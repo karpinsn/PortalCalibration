@@ -4,6 +4,7 @@
 #include <cv.h>
 #include <string>
 #include <assert.h>
+#include <tuple>
 
 using namespace std;
 
@@ -23,6 +24,7 @@ public:
   static cv::Ptr<cv::FeatureDetector> NewMarkerDetector( );
 
   static cv::Mat DitherImage( const cv::Mat originalImage );
+  static pair<int, int> CalculateMinimumPitch( int distance2Cover, int fringeStep );
 
   template <typename T> static T 
 	SampleAt(cv::Mat mat, cv::Point2f point);
