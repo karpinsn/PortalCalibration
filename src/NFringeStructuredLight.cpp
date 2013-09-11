@@ -12,7 +12,7 @@ float NFringeStructuredLight::GetPhi0( int pitch )
   float sine = 0.0f;
   float cosine = 0.0f;
 
-  for(int fringe = 0; fringe < m_numberOfFringes; ++fringe)
+  for(unsigned int fringe = 0; fringe < m_numberOfFringes; ++fringe)
   {
 	float phaseShift = ( 2.0f * M_PI * float(fringe) ) / float(m_numberOfFringes);
 	float fringeValue = ( 1.0f - cos( 2.0 * M_PI + phaseShift ) ) * .5f;
@@ -33,7 +33,7 @@ vector<cv::Mat> NFringeStructuredLight::GenerateFringe( const cv::Size fringeSiz
   if(direction == IStructuredLight::Vertical)
 	{ cv::transpose(fringeImage, fringeImage); }
 
-  for(int pattern = 0; pattern < m_numberOfFringes; ++pattern)
+  for(unsigned int pattern = 0; pattern < m_numberOfFringes; ++pattern)
   {
 	float phaseShift = ( 2.0 * M_PI * float(pattern) ) / float(m_numberOfFringes);
 	for(int row = 0; row < fringeImage.rows; ++row)
@@ -76,7 +76,7 @@ cv::Mat NFringeStructuredLight::WrapPhase( vector<cv::Mat> fringeImages, cv::Ptr
   {
 	for(int col = 0; col < phase.cols; ++col)
 	{
-	  for(int fringe = 0; fringe < m_numberOfFringes; ++fringe)
+	  for(unsigned int fringe = 0; fringe < m_numberOfFringes; ++fringe)
 	  {
 		sine.at<float>(row, col) += ( float( fringeImages[fringe].at<uchar>(row, col) ) / 255.0 ) * sin(2.0 * M_PI * float(fringe) / float(m_numberOfFringes));
 		cosine.at<float>(row, col) += ( float( fringeImages[fringe].at<uchar>(row, col) ) / 255.0 ) * cos(2.0 * M_PI * float(fringe) / float(m_numberOfFringes));

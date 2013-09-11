@@ -5,6 +5,8 @@
 
 #include <QObject>
 #include <QString>
+#include <QFile>
+#include <QTextStream>
 
 #include "ISerializer.h"
 #include "ScriptInterface.h"
@@ -25,7 +27,7 @@ public slots:
   bool Serialize(CalibrationData* calibrationData);
 
 private:
-  void _SerializeMatrix(ofstream& jsFile, const cv::Mat& matrix2Serialize);
+  void _SerializeMatrix(QTextStream& jsFile, const cv::Mat& matrix2Serialize);
 };
 
 #endif // _H_PORTAL_CALIBRATION_JS_SERIALIZER_

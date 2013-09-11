@@ -8,33 +8,34 @@ bool JSSerializer::Serialize( CalibrationData* calibrationData )
   if(nullptr == calibrationData)
 	{ return false; }
 
-  ofstream jsFile;
-  jsFile.open( m_filename.toStdString( ), ios::out | ios::trunc ); 
+  QFile file( m_filename );
 
-  if( !jsFile.is_open() )
+  if( !file.open( QIODevice::WriteOnly | QIODevice::Truncate ) )
 	{ return false; } // Unable to open the file
 
+  QTextStream jsFileStream( &file );
+
+
   // Output intrinsic calibration
-  jsFile << "this.Intrinsic = [";
-  _SerializeMatrix( jsFile, calibrationData->GetIntrinsic( ) );
-  jsFile << "]; \n";
+  jsFileStream << "this.Intrinsic = [";
+  _SerializeMatrix( jsFileStream, calibrationData->GetIntrinsic( ) );
+  jsFileStream << "]; \n";
 
   // Output distortion coefficients
-  jsFile << "this.Distortion = [";
-  _SerializeMatrix( jsFile, calibrationData->GetDistortion( ) );
-  jsFile << "]; \n";
+  jsFileStream << "this.Distortion = [";
+  _SerializeMatrix( jsFileStream, calibrationData->GetDistortion( ) );
+  jsFileStream << "]; \n";
 
   // Finally output extrinsic calibration
-  jsFile << "this.Extrinsic = [";
-  _SerializeMatrix( jsFile, calibrationData->GetExtrinsic( ) );
-  jsFile << "]; \n";
+  jsFileStream << "this.Extrinsic = [";
+  _SerializeMatrix( jsFileStream, calibrationData->GetExtrinsic( ) );
+  jsFileStream << "]; \n";
 
-  jsFile.close( );
-
+  file.close( );
   return true;
 }
 
-void JSSerializer::_SerializeMatrix(ofstream& jsFile, const cv::Mat& matrix2Serialize)
+void JSSerializer::_SerializeMatrix(QTextStream& jsFile, const cv::Mat& matrix2Serialize)
 {
   for(int row = 0; row < matrix2Serialize.rows; ++row)
   {

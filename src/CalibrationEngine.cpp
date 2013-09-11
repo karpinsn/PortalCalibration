@@ -48,7 +48,7 @@ void CalibrationEngine::StereoCalibrateStructuredLightSystem(IProjector* project
   auto systemPoints = GrabSystemImagePoints( *capture, projector, requestedSamples );
 
   vector<vector<cv::Point3f>> objectPointList;
-  for(int i = 0; i < systemPoints[0].size(); ++i)
+  for(unsigned int i = 0; i < systemPoints[0].size(); ++i)
 	{ objectPointList.push_back(objectPoints); }
 
   cv::Mat rotationMatrix = cv::Mat::zeros(3, 3, CV_64F);
@@ -155,7 +155,7 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 			auto verticalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Vertical);
 
 			vector< cv::Point2f > projectorPointBuffer;
-			for(int coord = 0; coord < pointBuffer.size( ); ++coord)
+			for(unsigned int coord = 0; coord < pointBuffer.size( ); ++coord)
 			{
 			  // Use the horizontal unwrapped phase to get the x and vertical for y
 			  NFringeStructuredLight fringeGenerator(5);
@@ -222,7 +222,7 @@ cv::Mat CalibrationEngine::ProjectAndCaptureWrappedPhase(lens::ICamera& capture,
   vector<cv::Mat> capturedFringes;
   cv::Mat gray;
 
-  for(int patternNumber = 0; patternNumber < fringeImages.size(); ++patternNumber)
+  for(unsigned int patternNumber = 0; patternNumber < fringeImages.size(); ++patternNumber)
   {
 	auto ditheredImage = Utils::DitherImage( fringeImages[patternNumber] );	
 	projector.ProjectImage( ditheredImage );
@@ -245,7 +245,7 @@ CalibrationData* CalibrationEngine::CalibrateView(vector<cv::Point3f> objectPoin
   vector<cv::Mat> translationVectors;
   
   vector<vector<cv::Point3f>> objectPointList;
-  for(int i = 0; i < imagePoints.size(); ++i)
+  for(unsigned int i = 0; i < imagePoints.size(); ++i)
 	{ objectPointList.push_back(objectPoints); }
 
   double reprojectError = cv::calibrateCamera(objectPointList, imagePoints, viewSize, intrinsicMatrix, distortionCoefficients, rotationVectors, translationVectors, CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5);
