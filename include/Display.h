@@ -5,6 +5,8 @@
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
+#include <algorithm>
 
 // OpenCV includes
 #include <cv.h>
@@ -25,6 +27,7 @@ public:
   Display(std::string displayName );
   ~Display();
   void ShowImage( cv::Mat image );
+  void ShowPlot( vector<cv::Point2f> points );
   void OverlayText( const std::string& text );
 };
 

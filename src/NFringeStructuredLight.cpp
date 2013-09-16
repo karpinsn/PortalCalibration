@@ -24,6 +24,23 @@ float NFringeStructuredLight::GetPhi0( int pitch )
   return -atan2(sine, cosine);
 }
 
+float NFringeStructuredLight::GetPhi( int pitch, int x )
+{
+  float sine = 0.0f;
+  float cosine = 0.0f;
+
+  for(unsigned int fringe = 0; fringe < m_numberOfFringes; ++fringe)
+  {
+	float phaseShift = ( 2.0f * M_PI * float(fringe) ) / float(m_numberOfFringes);
+	float fringeValue = ( 1.0f - cos( 2.0 * M_PI * (float(x) / float(pitch)) + phaseShift ) ) * .5f;
+	sine += fringeValue * sin(2.0f * M_PI * float(fringe) / float(m_numberOfFringes));
+	cosine += fringeValue * cos(2.0f * M_PI * float(fringe) / float(m_numberOfFringes));
+  }
+
+  // This is negative so that are phase gradient increases from 0 -> rows or 0 -> cols
+  return -atan2(sine, cosine);
+}
+
 vector<cv::Mat> NFringeStructuredLight::GenerateFringe( const cv::Size fringeSize, const int pitch, IStructuredLight::FringeDirection direction )
 {
   vector<cv::Mat> fringeImages;

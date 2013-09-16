@@ -134,60 +134,53 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 	  {
 		cv::drawChessboardCorners( colorFrame, m_boardSize, cv::Mat( pointBuffer ), found );
 
-		int key;
-		do
-		{
-		  // Just display to the user. They are setting up the calibration board
-		  display.OverlayText( "Press enter to accept, space to deny" );
-		  display.ShowImage( colorFrame );
-		  key = cvWaitKey( 15 );
-		} while( m_userAcceptKey != key && m_userDenyKey != key);
-
-		if( m_userAcceptKey == key )
+		if( VerifyWithUser( colorFrame, display ) )
 		{
 		  imagePoints[0].push_back( pointBuffer );
 		 
 		  if(nullptr != projector )
 		  {
-			cv::Mat horizontalUnwrappedPhase;
-			cv::Mat verticalUnwrappedPhase;
-			cv::Mat scaledPhase;
-
-			// We found all the markers in the camera view. Now we need to image with the projector	
-			do
-			{
-			  horizontalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Horizontal);
-			  scaledPhase = Utils::ScaleImage( horizontalUnwrappedPhase );
-			  cv::drawChessboardCorners( scaledPhase, m_boardSize, cv::Mat( pointBuffer ), true );
-			} while( !VerifyWithUser( scaledPhase, display ) );
-
-			do
-			{
-			  verticalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Vertical);
-			  scaledPhase = Utils::ScaleImage( verticalUnwrappedPhase );
-			  cv::drawChessboardCorners( scaledPhase, m_boardSize, cv::Mat( pointBuffer ), true );
-			} while( !VerifyWithUser( scaledPhase, display ) );
-
 			vector< cv::Point2f > projectorPointBuffer;
-			for(unsigned int coord = 0; coord < pointBuffer.size( ); ++coord)
+			cv::Mat projectorFrame;
+			do
 			{
-			  // Use the horizontal unwrapped phase to get the x and vertical for y
-			  NFringeStructuredLight fringeGenerator(5);
-			  auto horizontalPitches = Utils::CalculateMinimumPitch( projector->GetWidth( ), 5 );
-			  auto verticalPitches   = Utils::CalculateMinimumPitch( projector->GetHeight( ), 5 );
+			  projectorPointBuffer.clear( );
+			  cv::Mat horizontalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Horizontal);
+			  cv::Mat verticalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Vertical);
+
+			  for(unsigned int coord = 0; coord < pointBuffer.size( ); ++coord)
+			  {
+				// Use the horizontal unwrapped phase to get the x and vertical for y
+				NFringeStructuredLight fringeGenerator(5);
+				auto horizontalPitches = Utils::CalculateMinimumPitch( projector->GetWidth( ), 5 );
+				auto verticalPitches   = Utils::CalculateMinimumPitch( projector->GetHeight( ), 5 );
 			  
-			  // This just converts from phase to projector UV and pushes them back into the point buffer
-			  projectorPointBuffer.push_back(cv::Point2f(
-				InterpolateProjectorPosition(
-				  Utils::SampleAt<float>(horizontalUnwrappedPhase, pointBuffer[coord]), 
-				  fringeGenerator.GetPhi0( get<0>( horizontalPitches ) ), 
-				  get<0>( horizontalPitches ) ),
-				InterpolateProjectorPosition(
-				  Utils::SampleAt<float>(verticalUnwrappedPhase, pointBuffer[coord]), 
-				  fringeGenerator.GetPhi0( get<0>( verticalPitches ) ), 
-				  get<0>( verticalPitches ) ) 
-				) );
-			}
+				// This just converts from phase to projector UV and pushes them back into the point buffer
+				projectorPointBuffer.push_back(cv::Point2f(
+				  InterpolateProjectorPosition(
+					Utils::SampleAt<float>(horizontalUnwrappedPhase, pointBuffer[coord]), 
+					fringeGenerator.GetPhi0( get<0>( horizontalPitches ) ), 
+					get<0>( horizontalPitches ) ),
+				  InterpolateProjectorPosition(
+					Utils::SampleAt<float>(verticalUnwrappedPhase, pointBuffer[coord]), 
+					fringeGenerator.GetPhi0( get<0>( verticalPitches ) ), 
+					get<0>( verticalPitches ) ) 
+				  ) );
+			  }
+			  projectorFrame = cv::Mat( cv::Size( projector->GetWidth( ), projector->GetHeight( ) ), CV_8UC3, cv::Scalar(0,0,0));
+
+			  // Find the min and max elements
+			  auto minMaxX = minmax_element( projectorPointBuffer.begin( ), projectorPointBuffer.end( ), 
+				[]( cv::Point2f p1, cv::Point2f p2 ) { return p1.x < p2.x; } );
+			  auto minMaxY = minmax_element( projectorPointBuffer.begin( ), projectorPointBuffer.end( ), 
+				[]( cv::Point2f p1, cv::Point2f p2 ) { return p1.y < p2.y; } );  
+
+			  if( minMaxX.first->x >= 0 && minMaxY.first->x >= 0 && 
+				minMaxX.second->y < projector->GetWidth( ) && minMaxY.second->y < projector->GetHeight( ) )
+				{ cv::drawChessboardCorners( projectorFrame, m_boardSize, cv::Mat( projectorPointBuffer ), true ); }
+			  
+			} while( !VerifyWithUser( projectorFrame, display ) );
+
 			imagePoints[1].push_back(projectorPointBuffer);
 		  }
 

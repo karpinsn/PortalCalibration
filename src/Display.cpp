@@ -1,13 +1,16 @@
 #include "display.h"
 
 Display::Display(std::string displayName) : m_displayName(displayName)
-{ 
-  cv::namedWindow( m_displayName, CV_WINDOW_AUTOSIZE );
-}
+  { cv::namedWindow( m_displayName, CV_WINDOW_AUTOSIZE ); }
 
 Display::~Display()
+  { cv::destroyWindow( m_displayName ); }
+
+void Display::ShowPlot( vector<cv::Point2f> points )
 {
-  cv::destroyWindow( m_displayName );
+  
+
+
 }
 
 void Display::ShowImage( cv::Mat image )
@@ -20,6 +23,4 @@ void Display::ShowImage( cv::Mat image )
 }
 
 void Display::OverlayText( const std::string& text )
-{
-  m_currentMessage = text;
-}
+  { m_currentMessage = text; }
