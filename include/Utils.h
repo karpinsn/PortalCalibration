@@ -23,6 +23,7 @@ public:
   static void AssertOrThrowIfFalse(bool condition, string errorMessage);
   static cv::Ptr<cv::FeatureDetector> NewMarkerDetector( );
 
+  static cv::Mat ScaleImage( const cv::Mat image, double min = 0, double max = 0);
   static cv::Mat DitherImage( const cv::Mat originalImage );
   static pair<int, int> CalculateMinimumPitch( int distance2Cover, int fringeStep );
 

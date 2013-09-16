@@ -43,6 +43,17 @@ cv::Ptr<cv::FeatureDetector> Utils::NewMarkerDetector( )
   return new cv::SimpleBlobDetector( detectorParams );
 }
 
+cv::Mat Utils::ScaleImage( const cv::Mat image, double min, double max )
+{
+  if( 0 == min && 0 == max )
+  { cv::minMaxIdx( image, &min, &max ); }
+
+  cv::Mat scaledImage;
+  cv::convertScaleAbs( image, scaledImage, 255 / ( max - min ), -min );
+
+  return scaledImage;
+}
+
 cv::Mat Utils::DitherImage(const cv::Mat originalImage)
 {
   // TODO - This only works for a single channel image.

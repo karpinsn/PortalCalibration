@@ -109,7 +109,6 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 		// Project a white image so that it is easier to see the calibration board
 		whiteFrame = cv::Mat( cv::Size( projector->GetWidth( ), projector->GetHeight( ) ), CV_8UC3, cv::Scalar(255,255,255));
 		projector->ProjectImage(whiteFrame);
-		Sleep(200); // Give the projector time to project the image
 	  }
 
 	  while ( m_userWaitKey != cvWaitKey( 15 ) )
@@ -150,9 +149,24 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 		 
 		  if(nullptr != projector )
 		  {
-			// We found all the markers in the camera view. Now we need to image with the projector		
-			auto horizontalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Horizontal);
-			auto verticalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Vertical);
+			cv::Mat horizontalUnwrappedPhase;
+			cv::Mat verticalUnwrappedPhase;
+			cv::Mat scaledPhase;
+
+			// We found all the markers in the camera view. Now we need to image with the projector	
+			do
+			{
+			  horizontalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Horizontal);
+			  scaledPhase = Utils::ScaleImage( horizontalUnwrappedPhase );
+			  cv::drawChessboardCorners( scaledPhase, m_boardSize, cv::Mat( pointBuffer ), true );
+			} while( !VerifyWithUser( scaledPhase, display ) );
+
+			do
+			{
+			  verticalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Vertical);
+			  scaledPhase = Utils::ScaleImage( verticalUnwrappedPhase );
+			  cv::drawChessboardCorners( scaledPhase, m_boardSize, cv::Mat( pointBuffer ), true );
+			} while( !VerifyWithUser( scaledPhase, display ) );
 
 			vector< cv::Point2f > projectorPointBuffer;
 			for(unsigned int coord = 0; coord < pointBuffer.size( ); ++coord)
@@ -209,9 +223,9 @@ cv::Mat CalibrationEngine::ProjectAndCaptureUnwrappedPhase(lens::ICamera& captur
   cv::Size					    projectorSize( projector.GetWidth( ), projector.GetHeight( ) );
 
   auto smallWavelength = fringeGenerator.GenerateFringe(projectorSize, get<0>( pitches ), direction);
-  wrappedPhase.push_back( ProjectAndCaptureWrappedPhase( capture, projector, smallWavelength ) );
-
   auto largerWavelength = fringeGenerator.GenerateFringe(projectorSize, get<1>( pitches ), direction);
+
+  wrappedPhase.push_back( ProjectAndCaptureWrappedPhase( capture, projector, smallWavelength ) );
   wrappedPhase.push_back( ProjectAndCaptureWrappedPhase( capture, projector, largerWavelength ) );
 
   return phaseUnwrapper.UnwrapPhase(wrappedPhase);
@@ -290,4 +304,20 @@ vector<cv::Point3f> CalibrationEngine::CalculateObjectPoints()
 float CalibrationEngine::InterpolateProjectorPosition(float phi, float phi0, int pitch)
 {
   return 1.0 + ( ( phi - phi0) / ( ( 2.0 * M_PI ) / float( pitch ) ) );
+}
+
+bool CalibrationEngine::VerifyWithUser( cv::Mat image, Display& display )
+{
+  int key = 0;
+
+  // Prompt the user to accept
+  do
+  {
+	// Just display to the user. They are setting up the calibration board
+	display.OverlayText( "Press enter to accept, space to deny" );
+	display.ShowImage( image );
+	key = cvWaitKey( 15 );
+  } while( m_userAcceptKey != key && m_userDenyKey != key);
+
+  return m_userAcceptKey == key;
 }

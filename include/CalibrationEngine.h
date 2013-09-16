@@ -67,6 +67,7 @@ private:
 
 	cv::Mat DitherImage(const cv::Mat originalImage);
 	float InterpolateProjectorPosition(float phi, float phi0, int pitch);
+	bool VerifyWithUser( cv::Mat image, Display& display );
 };
 
 #endif // _H_PORTAL_CALIBRATION_CALIBRATION_ENGINE_
