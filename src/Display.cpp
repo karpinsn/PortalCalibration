@@ -6,13 +6,6 @@ Display::Display(std::string displayName) : m_displayName(displayName)
 Display::~Display()
   { cv::destroyWindow( m_displayName ); }
 
-void Display::ShowPlot( vector<cv::Point2f> points )
-{
-  
-
-
-}
-
 void Display::ShowImage( cv::Mat image )
 {
   // If we have a message, write it before we output the image

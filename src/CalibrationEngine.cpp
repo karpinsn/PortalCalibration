@@ -140,10 +140,7 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 
 		if(nullptr != projector )
 		{
-			
 		  cv::Mat projectorFrame;
-
-		  projectorPointBuffer.clear( );
 		  cv::Mat horizontalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Horizontal);
 		  cv::Mat verticalUnwrappedPhase = ProjectAndCaptureUnwrappedPhase(capture, *projector, IStructuredLight::Vertical);
 
@@ -167,16 +164,8 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 			  ) );
 		  }
 		  projectorFrame = cv::Mat( cv::Size( projector->GetWidth( ), projector->GetHeight( ) ), CV_8UC3, cv::Scalar(0,0,0));
-
-		  // Find the min and max elements
-		  auto minMaxX = minmax_element( projectorPointBuffer.begin( ), projectorPointBuffer.end( ), 
-			[]( cv::Point2f p1, cv::Point2f p2 ) { return p1.x < p2.x; } );
-		  auto minMaxY = minmax_element( projectorPointBuffer.begin( ), projectorPointBuffer.end( ), 
-			[]( cv::Point2f p1, cv::Point2f p2 ) { return p1.y < p2.y; } );  
-
-		  if( minMaxX.first->x >= 0 && minMaxY.first->x >= 0 && 
-			minMaxX.second->y < projector->GetWidth( ) && minMaxY.second->y < projector->GetHeight( ) )
-			{ cv::drawChessboardCorners( projectorFrame, m_boardSize, cv::Mat( projectorPointBuffer ), true ); }
+		  for( auto point = projectorPointBuffer.begin( ); point != projectorPointBuffer.end( ); ++point )
+			{ cv::circle( projectorFrame, (*point), 1, cv::Scalar( 255, 255, 255 ) ); }
 			  
 		  projector->ProjectImage( projectorFrame );
 		}
@@ -185,15 +174,11 @@ vector<vector<vector<cv::Point2f>>> CalibrationEngine::GrabSystemImagePoints(len
 		{
 		  imagePoints[0].push_back( pointBuffer );
 		  if( nullptr!= projector )
-		  {
-			imagePoints[1].push_back(projectorPointBuffer);
-		  }
+			{ imagePoints[1].push_back(projectorPointBuffer); }
 		  ++successes;
 		}
 		else
-		{
-		  found = false;
-		}
+		  { found = false; }
 	  }
 
 	  // Project white again so we can see
